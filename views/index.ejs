@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playwrite+IN:wght@100..400&display=swap" rel="stylesheet">
+    <title>日報生成</title>
+</head>
+<body>
+    <h1>Daily Report Generator</h1>
+
+    <!-- Form submission to "/excel" -->
+    <form action="/excel" method="post">
+        <!-- Date selector (default to current month) -->
+        <input type="month" name="month" id="month" value="<%= currentMonth %>" class="month-input">
+        
+
+        <% 
+        const weekdays = ['日', '月', '火', '水', '木', '金', '土']; // 曜日
+        
+        for (let day = 1; day <= totalDays; day++) {  
+            const dateObj = new Date(`${currentMonth}-${('0' + day).slice(-2)}`);
+            const weekday = weekdays[dateObj.getDay()]; // 曜日を取得
+        %>
+            <div class="input-container">
+                <input type="date" name="date-<%= day %>" value="<%= currentMonth %>-<%= ('0' + day).slice(-2) %>" class="date-input">
+                <input type="text" name="weekday-<%= day %>" value="<%= weekday %>" readonly class="weekday-input">
+        
+                <label>出勤</label>
+                <input type="time" name="on-time-<%= day %>" class="time-input">
+                
+                <label>退勤</label>
+                <input type="time" name="off-time-<%= day %>">
+            </div>
+            <br>
+        <% } %>
+
+        <input type="text" name="directory" placeholder="保存先ディレクトリ" class="directory-input">
+
+        <button type="submit">日報生成</button>
+    </form>
+
+    <% /* Auto-update the number of days when the month changes */ %>
+    <script>
+        document.getElementById("month").addEventListener("change", function() {
+            const selectedMonth = this.value; // YYYY-MM format
+            window.location.href = `/?month=${selectedMonth}`; // Reload page with selected month
+        });
+    </script>
+
+</body>
+</html>
