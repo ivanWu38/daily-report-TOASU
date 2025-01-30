@@ -1,96 +1,66 @@
-import ExcelJS from 'exceljs';
+import express from 'express';
+import path from 'path';
+import ejs from 'ejs';
+import bodyParser from 'body-parser';
 
-async function createExcelReport() {
-    // 1️⃣ Create a new workbook & worksheet
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('10月15日');
+const app = express();
+let frontEndData = [];
 
-    // 2️⃣ Set Column Widths (Based on your template)
-    worksheet.getColumn(1).width = 15;  // 時刻 (Time)
-    worksheet.getColumn(2).width = 40;  // 業務内容 (Work Description)
-    worksheet.getColumn(3).width = 20;  // 備考 (Remarks)
+// Set EJS as the view engine
+app.set('view engine', 'ejs');
 
-    // 3️⃣ Add Metadata Section (業務日, 所属, 氏名)
-    worksheet.mergeCells('O2:P2');
-    worksheet.getCell('O2').value = '業務日';
-    worksheet.getCell('O2').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('O2').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
+// Middleware to parse form data
+app.use(bodyParser.urlencoded({ extended: true }));
 
-    worksheet.mergeCells('Q2:U2');
-    worksheet.getCell('Q2').value = '2024/10/15'; // Dynamic Date
-    worksheet.getCell('Q2').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('Q2').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    worksheet.mergeCells('O3:P3');
-    worksheet.getCell('O3').value = '所属';
-    worksheet.getCell('O3').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('O3').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    worksheet.mergeCells('Q3:U3');
-    worksheet.getCell('Q3').value = '事業開発部'; // Dynamic Department
-    worksheet.getCell('Q3').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('Q3').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    worksheet.mergeCells('O4:P4');
-    worksheet.getCell('O4').value = '氏名';
-    worksheet.getCell('O4').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('O4').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    worksheet.mergeCells('Q4:U4');
-    worksheet.getCell('Q4').value = '呉昊平'; // Dynamic Employee Name
-    worksheet.getCell('Q4').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('Q4').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    // 4️⃣ Create Header Row
-    worksheet.mergeCells('A6:A7');
-    worksheet.getCell('A6').value = '時刻';
-    worksheet.getCell('A6').font = { bold: true };
-    worksheet.getCell('A6').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('A6').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    worksheet.mergeCells('B6:Q6');
-    worksheet.getCell('B6').value = '業務内容';
-    worksheet.getCell('B6').font = { bold: true };
-    worksheet.getCell('B6').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('B6').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    worksheet.mergeCells('R6:U6');
-    worksheet.getCell('R6').value = '備考';
-    worksheet.getCell('R6').font = { bold: true };
-    worksheet.getCell('R6').alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getCell('R6').border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-    // 5️⃣ Add Work Schedule
-    const schedule = [
-        { time: '8:00-12:00', tasks: ['AIオープン研修企画'] },
-        { time: '12:00-13:00', tasks: ['休憩'] },
-        { time: '13:00-18:30', tasks: ['AIオープン研修企画', '社内研修を受講', '部署定例会'] }
-    ];
-
-    let rowIndex = 8;
-    schedule.forEach((entry) => {
-        // Merge cells for multi-row time slots
-        worksheet.mergeCells(`A${rowIndex}:A${rowIndex + entry.tasks.length - 1}`);
-        worksheet.getCell(`A${rowIndex}`).value = entry.time;
-        worksheet.getCell(`A${rowIndex}`).alignment = { horizontal: 'center', vertical: 'middle' };
-        worksheet.getCell(`A${rowIndex}`).border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-        entry.tasks.forEach((task, i) => {
-            worksheet.mergeCells(`B${rowIndex + i}:Q${rowIndex + i}`);
-            worksheet.getCell(`B${rowIndex + i}`).value = task;
-            worksheet.getCell(`B${rowIndex + i}`).border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-
-            worksheet.mergeCells(`R${rowIndex + i}:U${rowIndex + i}`);
-            worksheet.getCell(`R${rowIndex + i}`).border = { top: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } };
-        });
-
-        rowIndex += entry.tasks.length;
-    });
-
-    // 6️⃣ Save the file
-    await workbook.xlsx.writeFile('Work_Report.xlsx');
-    console.log('Excel file created successfully!');
+// Function to get the number of days in a given month
+function getDaysInMonth(year, month) {
+    return new Date(year, month, 0).getDate(); // Last day of the month
 }
 
-// Run function
-createExcelReport();
+// Route for rendering the form
+app.get('/', (req, res) => {
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth() + 1; // Get current month (1-12)
+
+    // If user selects a different month, update it
+    if (req.query.month) {
+        [year, month] = req.query.month.split('-').map(Number);
+    }
+
+    const totalDays = getDaysInMonth(year, month);
+    const currentMonth = `${year}-${('0' + month).slice(-2)}`; // Format YYYY-MM
+
+    res.render('index', { currentMonth, totalDays });
+});
+
+// Route for handling form submission
+app.post('/excel', (req, res) => {
+    const { month, ...data } = req.body; // Extract "month", rest goes into "data"
+    
+    const totalDays = Object.keys(data)
+        .filter(key => key.startsWith('date-')) // Get only date keys
+        .length;
+
+    // Restructure into an array of objects
+    const days = [];
+    for (let day = 1; day <= totalDays; day++) {
+        days.push({
+            date: data[`date-${day}`],
+            weekday: data[`weekday-${day}`],
+            onTime: data[`on-time-${day}`] || "",
+            offTime: data[`off-time-${day}`] || ""
+        });
+    }
+
+    const formattedData = { month, days };
+
+    console.log(formattedData); // Logs the structured data
+    res.json(formattedData); // Send structured JSON response
+});
+
+// Start the server
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
