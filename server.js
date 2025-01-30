@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'path';
 import ejs from 'ejs';
 import bodyParser from 'body-parser';
+import { processFrontEndData } from './services/dataProcessor.js'; // Import function
+import { createExcelReport } from './routes/excel.js';
 
 const app = express();
 let frontEndData = [];
@@ -36,31 +38,33 @@ app.get('/', (req, res) => {
 
 // Route for handling form submission
 app.post('/excel', (req, res) => {
-    const { month, ...data } = req.body; // Extract "month", rest goes into "data"
-    
-    const totalDays = Object.keys(data)
-        .filter(key => key.startsWith('date-')) // Get only date keys
-        .length;
+    const rawFrontEndData = processFrontEndData(req.body);
 
-    // Restructure into an array of objects
-    const days = [];
-    for (let day = 1; day <= totalDays; day++) {
-        days.push({
-            date: data[`date-${day}`],
-            weekday: data[`weekday-${day}`],
-            onTime: data[`on-time-${day}`] || "",
-            offTime: data[`off-time-${day}`] || ""
-        });
-    }
+    // Filter out days where onTime or offTime is empty
+    const filteredDays = rawFrontEndData.days.filter(day => day.onTime !== "" && day.offTime !== "");
 
-    const formattedData = { month, days };
+    const processedData = { 
+        month: rawFrontEndData.month, 
+        days: filteredDays 
+    };
 
-    console.log(formattedData); // Logs the structured data
-    res.json(formattedData); // Send structured JSON response
+    console.log(processedData); // Logs filtered data
+    res.json(processedData); // Send only valid records
+    frontEndData = processedData;
+
+    console.log(frontEndData.days.length);
+
 });
+
+
+
+
+
+
 
 // Start the server
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
