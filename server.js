@@ -65,9 +65,9 @@ app.post('/excel', (req, res) => {
     frontEndData = processedData;
 
     if (frontEndData.days.length > 0) {
-        const filePath = path.join(directory, 'Work_Report.xlsx');
-        createExcelReports(frontEndData.days, filePath);
-        res.send(`日報が生成されました。ファイルは ${filePath} に保存されました。`);
+        const filePathServer = path.join(directory, `${frontEndData.month}_Work_Report.xlsx`);
+        createExcelReports(frontEndData.days, filePathServer);
+        res.send(`日報が生成されました。ファイルは ${filePathServer} に保存されました。`);
     } else {
         res.send("データがありません");
     }

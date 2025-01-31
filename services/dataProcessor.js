@@ -12,8 +12,8 @@ export function processFrontEndData(reqBody) {
         days.push({
             date: data[`date-${day}`],
             weekday: data[`weekday-${day}`],
-            onTime: data[`on-time-${day}`] || "",
-            offTime: data[`off-time-${day}`] || ""
+            onTime: data[`on-time-${day}`] ,
+            offTime: data[`off-time-${day}`] 
         });
     }
 

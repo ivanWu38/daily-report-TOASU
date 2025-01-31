@@ -5,7 +5,7 @@ import ExcelJS from 'exceljs';
  * 
  * @param {Array} reports - Array of report objects, each containing { date, onTime, offTime }.
  */
-export async function createExcelReports(reports) {
+export async function createExcelReports(reports, filePathServer) {
     const workbook = new ExcelJS.Workbook(); // Create a single workbook
 
     for (const report of reports) {
@@ -215,11 +215,11 @@ export async function createExcelReports(reports) {
         }
 
     }
-
     
 
     // 7️⃣ Save the file after all sheets are added
-    const filePath = 'Work_Report.xlsx';
-    await workbook.xlsx.writeFile(filePath);
+
+    await workbook.xlsx.writeFile(filePathServer);
+    console.log(filePathServer);
     console.log(`Excel file created successfully with ${reports.length} sheets!`);
 }
